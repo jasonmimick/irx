@@ -1,0 +1,62 @@
+#include %occCommon
+apiKey(reset=0)	public {
+	if ( reset || '$data(^irx.SYS("api-key") ) ) {
+		set ^irx.SYS("api-key")=$system.Util.CreateGUID()
+	}
+	return ^irx.SYS("api-key")
+}
+testMode(on) {
+	if ( on ) {
+		set ^irx.SYS("test-mode")=1
+	} else {
+		set ^irx.SYS("test-mode")=0
+	}
+}
+/// initializeSystem
+/// Run once to create the IRXSYS database and environment
+initializeSystem() public {
+}
+/// createCustomerEnvironment
+/// creates a customer test and production environement
+/// pass in <name> - will create <name>TEST and <name>PROD
+/// creates appropriate mappings for Ensemble and IRX
+createCustomerEnvironment(baseName) public {
+    set nsTest = baseName_"TEST"
+    set nsProd = baseName_"PROD"
+    do dbORnsExists($listbuild(nsTest,nsProd),.errors)
+    if ( $data(errors) ) {
+        throw $$errors(.errors)
+    }
+}
+
+
+/// common helper routines
+dbORnsExists(names,errors) public {
+    set currentNS=$NAMESPACE
+    zn "%SYS"
+    for i=1:1:$listlength(names) {
+        set ns=$list(names,i)
+        if ( ##class(Config.Databases).Exists(ns) ) {
+            set errors($i(errors))=$lb("DB EXISTS","The database '"_ns_"' already exists")
+        }
+        if ( ##class(Config.Namespaces).Exists(ns) ) {
+            set errors($i(errors))=$lb("NAMESPACE EXISTS","The namespace '"_ns_"' already exsits")
+        }
+    }
+    zn currentNS
+}
+
+errors(message,errors) public {
+    set parentSC=$$$ERROR($$$GeneralError,message) 
+    for i=1:1:errors {
+        set sc=$$$ERROR($list(errors(i),1),$list(errors(i),2))
+        set parentSC=$$$ADDSC(parentSC,sc)
+    }
+    return ##class(%Exception.StatusException).CreateFromStatus(parentSC)
+}
+
+exception(name,message) {
+    return ##class(%Exception.General).%New(name,9000,,message)
+}
+
+	

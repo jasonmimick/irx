@@ -1,4 +1,3 @@
-Number of args=2,pull,irx.MockControlCenter.cls,
 /// Fake control center endpoint to which we can send messages from Ensemble
 Class irx.MockControlCenter Extends %CSP.Page
 {
