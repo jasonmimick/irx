@@ -15,4 +15,15 @@ ClassMethod toObject(json as %String, classname as %String = "") as %RegisteredO
 
 }
 
+ClassMethod extract(json as %String,property as %String) as %String
+{
+	try {
+		set object=..toObject(json)
+		return $property(object,property)
+	} catch error {
+		do error.Log()
+		return "unknown"
+	}
+
+}
 }
